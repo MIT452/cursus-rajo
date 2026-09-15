@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Level {
+  DEBUTANT
+  INTERMEDIAIRE
+  AVANCE
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  password      String
+  role          Role         @default(USER)
+  avatarColor   String       @default("#7C6FF0")
+  createdAt     DateTime     @default(now())
+  enrollments   Enrollment[]
+
+  @@map("users")
+}
+
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  slug    String   @unique
+  icon    String   @default("BookOpen")
+  courses Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id             Int          @id @default(autoincrement())
+  title          String
+  slug           String       @unique
+  description    String       @db.Text
+  thumbnailColor String       @default("#7C6FF0")
+  instructor     String
+  level          Level        @default(DEBUTANT)
+  durationHours  Int          @default(1)
+  price          Float        @default(0)
+  rating         Float        @default(4.5)
+  published      Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  categoryId     Int
+  category       Category     @relation(fields: [categoryId], references: [id])
+  lessons        Lesson[]
+  enrollments    Enrollment[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id            Int    @id @default(autoincrement())
+  title         String
+  durationMin   Int    @default(10)
+  order         Int    @default(0)
+  courseId      Int
+  course        Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("lessons")
+}
+
+model Enrollment {
+  id          Int       @id @default(autoincrement())
+  progress    Int       @default(0)
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    Int
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
