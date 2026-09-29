@@ -1,3 +1,5 @@
+Géré par : RABETOKOTANY Ny Tsanta Fiderana
+
 # Cursus — Plateforme e-learning
 
 Cursus est une plateforme de cours en ligne : landing page premium avec animations, catalogue filtrable, fiche cours, authentification JWT, et tableau de bord de progression pour l'apprenant.

@@ -87,7 +87,7 @@ const CourseDetail = () => {
           <FadeIn delay={0.2} direction="left">
             <div className="sticky top-28 rounded-xl2 border border-white/8 bg-ink-800/60 p-6 backdrop-blur-sm">
               <p className="font-display text-3xl text-gold-400">
-                {course.price === 0 ? "Gratuit" : `${course.price} Ariary`}
+                {course.price === 0 ? "Gratuit" : `${course.price} Ar`}
               </p>
               <p className="mt-1 text-xs text-paper-400">Niveau {levelLabels[course.level]}</p>
 

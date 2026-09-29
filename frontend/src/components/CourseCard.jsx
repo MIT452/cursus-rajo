@@ -51,7 +51,7 @@ const CourseCard = ({ course }) => (
             {levelLabels[course.level]}
           </span>
           <span className="font-display text-lg text-gold-400">
-            {course.price === 0 ? "Gratuit" : `${course.price} €`}
+            {course.price === 0 ? "Gratuit" : `${course.price} Ar`}
           </span>
         </div>
       </div>
