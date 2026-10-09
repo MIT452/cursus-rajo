@@ -69,6 +69,7 @@ model Lesson {
   order         Int    @default(0)
   courseId      Int
   course        Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  completions   LessonProgress[]
 
   @@map("lessons")
 }
@@ -82,7 +83,20 @@ model Enrollment {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   courseId    Int
   course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonProgress LessonProgress[]
 
   @@unique([userId, courseId])
   @@map("enrollments")
+}
+
+model LessonProgress {
+  id           Int        @id @default(autoincrement())
+  completedAt  DateTime   @default(now())
+  enrollmentId Int
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     Int
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+  @@map("lesson_progress")
 }

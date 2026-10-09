@@ -29,3 +29,8 @@ export const updateEnrollmentProgress = async (id, progress) => {
   const { data } = await api.put(`/enrollments/${id}`, { progress });
   return data.data;
 };
+
+export const completeLesson = async (enrollmentId, lessonId) => {
+  const { data } = await api.post(`/enrollments/${enrollmentId}/lessons/${lessonId}/complete`);
+  return data.data;
+};

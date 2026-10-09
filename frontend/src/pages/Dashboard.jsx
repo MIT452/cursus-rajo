@@ -4,6 +4,7 @@ import { BookOpen, Flame, GraduationCap, Clock3, BookX } from "lucide-react";
 import { getDashboardStats } from "../services/dashboardService";
 import { getMyEnrollments, updateEnrollmentProgress } from "../services/courseService";
 import { useAuth } from "../hooks/useAuth";
+import { hasLessonContent } from "../data/lessonContent";
 import Card from "../components/Card";
 import Loading from "../components/Loading";
 import EmptyState from "../components/EmptyState";
@@ -141,18 +142,30 @@ const Dashboard = () => {
                           />
                         </div>
                         <span className="text-xs text-paper-400">{e.progress}%</span>
+                        {hasLessonContent(e.course.slug) && (
+                          <span className="text-xs text-paper-400">
+                            · {e.lessonProgress?.length ?? 0}/{e.course._count?.lessons ?? 0} leçons
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      {e.progress < 100 ? (
+                      {e.progress >= 100 ? (
+                        <span className="text-xs text-teal-400">Termine</span>
+                      ) : hasLessonContent(e.course.slug) ? (
+                        <Link
+                          to={`/cours/${e.course.slug}`}
+                          className="text-xs text-violet-400 hover:text-violet-300"
+                        >
+                          Continuer le cours
+                        </Link>
+                      ) : (
                         <button
                           onClick={() => markProgress(e.id, Math.min(100, e.progress + 25))}
                           className="text-xs text-violet-400 hover:text-violet-300"
                         >
                           + 25% avance
                         </button>
-                      ) : (
-                        <span className="text-xs text-teal-400">Termine</span>
                       )}
                     </td>
                   </tr>

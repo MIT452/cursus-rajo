@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, Star, Users, CheckCircle2, PlayCircle } from "lucide-react";
-import { getCourseBySlug, enrollInCourse } from "../services/courseService";
+import {
+  getCourseBySlug,
+  enrollInCourse,
+  getMyEnrollments,
+  completeLesson,
+} from "../services/courseService";
+import { getLessonContent, hasLessonContent } from "../data/lessonContent";
+import LessonModal from "../components/LessonModal";
 import { useAuth } from "../hooks/useAuth";
 import Loading from "../components/Loading";
 import Badge from "../components/Badge";
@@ -17,7 +24,12 @@ const CourseDetail = () => {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
-  const [enrolled, setEnrolled] = useState(false);
+  const [enrollment, setEnrollment] = useState(null); // { id, progress }
+  const [completedIds, setCompletedIds] = useState([]);
+  const [openIndex, setOpenIndex] = useState(null);
+
+  const enrolled = Boolean(enrollment);
+  const tracked = course ? hasLessonContent(course.slug) : false;
 
   useEffect(() => {
     setLoading(true);
@@ -25,6 +37,23 @@ const CourseDetail = () => {
       .then(setCourse)
       .finally(() => setLoading(false));
   }, [slug]);
+
+  // retrouve l'inscription réelle de l'utilisateur (et ses leçons validées)
+  const syncEnrollment = async (courseId) => {
+    const mine = await getMyEnrollments();
+    const found = mine.find((e) => e.courseId === courseId);
+    setEnrollment(found ? { id: found.id, progress: found.progress } : null);
+    setCompletedIds(found ? found.lessonProgress.map((l) => l.lessonId) : []);
+  };
+
+  useEffect(() => {
+    if (!user || !course) {
+      setEnrollment(null);
+      setCompletedIds([]);
+      return;
+    }
+    syncEnrollment(course.id).catch(() => {});
+  }, [user, course]);
 
   const handleEnroll = async () => {
     if (!user) {
@@ -34,12 +63,20 @@ const CourseDetail = () => {
     setEnrolling(true);
     try {
       await enrollInCourse(course.id);
-      setEnrolled(true);
     } catch {
-      setEnrolled(true);
+      // déjà inscrit (409) ou autre erreur : on resynchronise ci-dessous
+    }
+    try {
+      await syncEnrollment(course.id);
     } finally {
       setEnrolling(false);
     }
+  };
+
+  const handleCompleteLesson = async (lesson) => {
+    const result = await completeLesson(enrollment.id, lesson.id);
+    setEnrollment({ id: result.id, progress: result.progress });
+    setCompletedIds(result.completedLessonIds);
   };
 
   if (loading) return <div className="min-h-screen bg-ink-950 pt-36"><Loading label="Chargement du cours" /></div>;
@@ -67,20 +104,34 @@ const CourseDetail = () => {
           <FadeIn delay={0.1}>
             <h2 className="font-display text-xl text-paper-50">Programme du cours</h2>
             <div className="mt-5 space-y-3">
-              {course.lessons.map((lesson, i) => (
-                <div
-                  key={lesson.id}
-                  className="flex items-center justify-between rounded-xl2 border border-white/8 bg-ink-800/50 px-5 py-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-xs text-paper-400">
-                      {i + 1}
-                    </span>
-                    <span className="text-sm text-paper-50">{lesson.title}</span>
-                  </div>
-                  <span className="text-xs text-paper-400">{lesson.durationMin} min</span>
-                </div>
-              ))}
+              {course.lessons.map((lesson, i) => {
+                const done = completedIds.includes(lesson.id);
+                const clickable = tracked && Boolean(getLessonContent(course.slug, i));
+                const Wrapper = clickable ? "button" : "div";
+                return (
+                  <Wrapper
+                    key={lesson.id}
+                    {...(clickable ? { type: "button", onClick: () => setOpenIndex(i) } : {})}
+                    className={`flex w-full items-center justify-between rounded-xl2 border bg-ink-800/50 px-5 py-4 text-left transition-colors ${
+                      done ? "border-teal-400/30" : "border-white/8"
+                    } ${clickable ? "cursor-pointer hover:border-violet-400/40 hover:bg-ink-800" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs ${
+                          done
+                            ? "border-teal-400/40 bg-teal-500/15 text-teal-400"
+                            : "border-white/10 text-paper-400"
+                        }`}
+                      >
+                        {done ? <CheckCircle2 size={14} /> : i + 1}
+                      </span>
+                      <span className="text-sm text-paper-50">{lesson.title}</span>
+                    </div>
+                    <span className="text-xs text-paper-400">{lesson.durationMin} min</span>
+                  </Wrapper>
+                );
+              })}
             </div>
           </FadeIn>
 
@@ -101,6 +152,21 @@ const CourseDetail = () => {
                 </Button>
               )}
 
+              {enrolled && tracked && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs text-paper-400">
+                    <span>{completedIds.length} / {course.lessons.length} leçons</span>
+                    <span>{enrollment.progress}%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-violet-500 to-teal-400 transition-all duration-500"
+                      style={{ width: `${enrollment.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <ul className="mt-6 space-y-2.5 text-sm text-paper-100">
                 <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-teal-400" /> Acces a vie</li>
                 <li className="flex items-center gap-2"><CheckCircle2 size={14} className="text-teal-400" /> Suivi de progression</li>
@@ -110,6 +176,22 @@ const CourseDetail = () => {
           </FadeIn>
         </div>
       </div>
+
+      {tracked && openIndex !== null && course.lessons[openIndex] && (
+        <LessonModal
+          open
+          onClose={() => setOpenIndex(null)}
+          lesson={course.lessons[openIndex]}
+          index={openIndex}
+          total={course.lessons.length}
+          content={getLessonContent(course.slug, openIndex)}
+          completed={completedIds.includes(course.lessons[openIndex].id)}
+          completedCount={completedIds.length}
+          enrolled={enrolled}
+          onEnroll={handleEnroll}
+          onComplete={handleCompleteLesson}
+        />
+      )}
     </div>
   );
 };
