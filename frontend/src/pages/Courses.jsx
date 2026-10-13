@@ -21,6 +21,7 @@ const Courses = () => {
   const [category, setCategory] = useState("");
   const [level, setLevel] = useState("");
   const [sort, setSort] = useState("");
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {});
@@ -28,9 +29,11 @@ const Courses = () => {
 
   useEffect(() => {
     setLoading(true);
+    setError(false);
     const timeout = setTimeout(() => {
       getCourses({ search, category, level, sort })
         .then(setCourses)
+        .catch(() => setError(true))
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(timeout);
@@ -93,6 +96,12 @@ const Courses = () => {
         <div className="mt-10">
           {loading ? (
             <Loading label="Recherche des cours" />
+          ) : error ? (
+            <EmptyState
+              icon={BookX}
+              title="Impossible de charger les cours"
+              description="Le serveur ne répond pas. Vérifiez que le backend tourne sur le port 5000 et que la base est démarrée."
+            />
           ) : courses.length === 0 ? (
             <EmptyState
               icon={BookX}

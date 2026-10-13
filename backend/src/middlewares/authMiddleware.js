@@ -38,4 +38,13 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { authMiddleware, adminOnly };
+// Les administrateurs gèrent la plateforme : ils ne suivent pas de cours.
+const studentOnly = (req, res, next) => {
+  if (req.user?.role === "ADMIN") {
+    res.status(403);
+    return next(new Error("Les administrateurs ne peuvent pas suivre de cours"));
+  }
+  next();
+};
+
+module.exports = { authMiddleware, adminOnly, studentOnly };

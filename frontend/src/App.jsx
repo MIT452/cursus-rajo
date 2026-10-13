@@ -7,7 +7,7 @@ import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import DashboardHome from "./pages/DashboardHome";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -31,7 +31,7 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Dashboard />} />
+        <Route index element={<DashboardHome />} />
         <Route path="profil" element={<Profile />} />
       </Route>
     </Routes>

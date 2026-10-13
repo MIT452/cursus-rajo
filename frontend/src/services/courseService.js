@@ -34,3 +34,8 @@ export const completeLesson = async (enrollmentId, lessonId) => {
   const { data } = await api.post(`/enrollments/${enrollmentId}/lessons/${lessonId}/complete`);
   return data.data;
 };
+
+export const updateCoursePrice = async (id, price) => {
+  const { data } = await api.put(`/courses/${id}/price`, { price });
+  return data.data;
+};

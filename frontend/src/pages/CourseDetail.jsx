@@ -28,6 +28,7 @@ const CourseDetail = () => {
   const [completedIds, setCompletedIds] = useState([]);
   const [openIndex, setOpenIndex] = useState(null);
 
+  const isAdmin = user?.role === "ADMIN";
   const enrolled = Boolean(enrollment);
   const tracked = course ? hasLessonContent(course.slug) : false;
 
@@ -47,7 +48,7 @@ const CourseDetail = () => {
   };
 
   useEffect(() => {
-    if (!user || !course) {
+    if (!user || isAdmin || !course) {
       setEnrollment(null);
       setCompletedIds([]);
       return;
@@ -106,7 +107,7 @@ const CourseDetail = () => {
             <div className="mt-5 space-y-3">
               {course.lessons.map((lesson, i) => {
                 const done = completedIds.includes(lesson.id);
-                const clickable = tracked && Boolean(getLessonContent(course.slug, i));
+                const clickable = tracked && !isAdmin && Boolean(getLessonContent(course.slug, i));
                 const Wrapper = clickable ? "button" : "div";
                 return (
                   <Wrapper
@@ -142,7 +143,11 @@ const CourseDetail = () => {
               </p>
               <p className="mt-1 text-xs text-paper-400">Niveau {levelLabels[course.level]}</p>
 
-              {enrolled ? (
+              {isAdmin ? (
+                <p className="mt-6 rounded-xl2 border border-white/8 bg-ink-900/50 px-4 py-3 text-xs leading-relaxed text-paper-400">
+                  Compte administrateur : le suivi des cours est réservé aux étudiants.
+                </p>
+              ) : enrolled ? (
                 <div className="mt-6 flex items-center justify-center gap-2 rounded-full bg-teal-500/15 px-5 py-3 text-sm text-teal-400">
                   <CheckCircle2 size={16} /> Vous etes inscrit
                 </div>

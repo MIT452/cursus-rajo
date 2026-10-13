@@ -3,7 +3,22 @@
 // Un cours présent ici est "suivi par leçons" : sa progression dépend des
 // leçons validées (et non plus du bouton manuel du dashboard).
 
+import reactVite from "./lessons/react-vite-spa-moderne";
+import machineLearning from "./lessons/introduction-machine-learning";
+import pytorch from "./lessons/deep-learning-pytorch";
+import uiDesign from "./lessons/ui-design-principes-outils";
+import uxResearch from "./lessons/ux-research-produits-digitaux";
+import agileScrum from "./lessons/gestion-projet-agile-scrum";
+import growth from "./lessons/strategie-croissance-startups";
+
 export const lessonContent = {
+  "react-vite-spa-moderne": reactVite,
+  "introduction-machine-learning": machineLearning,
+  "deep-learning-pytorch": pytorch,
+  "ui-design-principes-outils": uiDesign,
+  "ux-research-produits-digitaux": uxResearch,
+  "gestion-projet-agile-scrum": agileScrum,
+  "strategie-croissance-startups": growth,
   "nodejs-express-api-rest": [
     {
       intro:

@@ -2,9 +2,7 @@ const express = require("express");
 const {
   getCourses,
   getCourseBySlug,
-  createCourse,
-  updateCourse,
-  deleteCourse,
+  updateCoursePrice,
 } = require("../controllers/courseController");
 const { authMiddleware, adminOnly } = require("../middlewares/authMiddleware");
 
@@ -12,8 +10,7 @@ const router = express.Router();
 
 router.get("/", getCourses);
 router.get("/:slug", getCourseBySlug);
-router.post("/", authMiddleware, adminOnly, createCourse);
-router.put("/:id", authMiddleware, adminOnly, updateCourse);
-router.delete("/:id", authMiddleware, adminOnly, deleteCourse);
+// seule action d'écriture possible pour l'admin : fixer le prix
+router.put("/:id/price", authMiddleware, adminOnly, updateCoursePrice);
 
 module.exports = router;
