@@ -1,0 +1,56 @@
+import api from "./api";
+
+export const getCourses = async (params = {}) => {
+  const { data } = await api.get("/courses", { params });
+  return data.data;
+};
+
+export const getCourseBySlug = async (slug) => {
+  const { data } = await api.get(`/courses/${slug}`);
+  return data.data;
+};
+
+export const getCategories = async () => {
+  const { data } = await api.get("/categories");
+  return data.data;
+};
+
+export const enrollInCourse = async (courseId) => {
+  const { data } = await api.post("/enrollments", { courseId });
+  return data.data;
+};
+
+export const getMyEnrollments = async () => {
+  const { data } = await api.get("/enrollments/me");
+  return data.data;
+};
+
+export const updateEnrollmentProgress = async (id, progress) => {
+  const { data } = await api.put(`/enrollments/${id}`, { progress });
+  return data.data;
+};
+
+export const completeLesson = async (enrollmentId, lessonId) => {
+  const { data } = await api.post(`/enrollments/${enrollmentId}/lessons/${lessonId}/complete`);
+  return data.data;
+};
+
+export const updateCoursePrice = async (id, price) => {
+  const { data } = await api.put(`/courses/${id}/price`, { price });
+  return data.data;
+};
+
+export const createCourse = async (payload) => {
+  const { data } = await api.post("/courses", payload);
+  return data.data;
+};
+
+export const updateCourse = async (id, payload) => {
+  const { data } = await api.put(`/courses/${id}`, payload);
+  return data.data;
+};
+
+export const deleteCourse = async (id) => {
+  const { data } = await api.delete(`/courses/${id}`);
+  return data;
+};

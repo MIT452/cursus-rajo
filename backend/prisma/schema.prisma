@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Level {
+  DEBUTANT
+  INTERMEDIAIRE
+  AVANCE
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  password      String
+  role          Role         @default(USER)
+  avatarColor   String       @default("#7C6FF0")
+  createdAt     DateTime     @default(now())
+  enrollments   Enrollment[]
+  testimonial   Testimonial?
+
+  @@map("users")
+}
+
+model Category {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  slug    String   @unique
+  icon    String   @default("BookOpen")
+  courses Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id             Int          @id @default(autoincrement())
+  title          String
+  slug           String       @unique
+  description    String       @db.Text
+  thumbnailColor String       @default("#7C6FF0")
+  instructor     String
+  level          Level        @default(DEBUTANT)
+  durationHours  Int          @default(1)
+  price          Float        @default(0)
+  rating         Float        @default(4.5)
+  published      Boolean      @default(true)
+  tracked        Boolean      @default(false) // true = leçons avec contenu et progression automatique
+  createdAt      DateTime     @default(now())
+  categoryId     Int
+  category       Category     @relation(fields: [categoryId], references: [id])
+  lessons        Lesson[]
+  enrollments    Enrollment[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id            Int    @id @default(autoincrement())
+  title         String
+  durationMin   Int    @default(10)
+  order         Int    @default(0)
+  content       Json?  // mini-leçon : intro, exemple, exercice (cours créés par l'admin)
+  courseId      Int
+  course        Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  completions   LessonProgress[]
+
+  @@map("lessons")
+}
+
+model Enrollment {
+  id          Int       @id @default(autoincrement())
+  progress    Int       @default(0)
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    Int
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonProgress LessonProgress[]
+
+  @@unique([userId, courseId])
+  @@map("enrollments")
+}
+
+model LessonProgress {
+  id           Int        @id @default(autoincrement())
+  completedAt  DateTime   @default(now())
+  enrollmentId Int
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId     Int
+  lesson       Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  rating    Int      @default(5)
+  role      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("testimonials")
+}
