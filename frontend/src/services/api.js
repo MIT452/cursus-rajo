@@ -12,4 +12,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Si le compte est suspendu pendant la session, on ferme la session et on revient à la connexion.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error.response?.data?.message || "";
+    if (error.response?.status === 403 && /suspendu/i.test(message) && localStorage.getItem("cursus_token")) {
+      localStorage.removeItem("cursus_token");
+      window.location.href = "/connexion";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

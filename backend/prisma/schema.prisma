@@ -25,6 +25,8 @@ model User {
   password      String
   role          Role         @default(USER)
   avatarColor   String       @default("#7C6FF0")
+  suspended     Boolean      @default(false)
+  suspendedAt   DateTime?
   createdAt     DateTime     @default(now())
   enrollments   Enrollment[]
   testimonial   Testimonial?

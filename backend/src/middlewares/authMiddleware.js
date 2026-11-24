@@ -14,7 +14,7 @@ const authMiddleware = async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, name: true, email: true, role: true, avatarColor: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, avatarColor: true, createdAt: true, suspended: true },
     });
 
     if (!user) {
@@ -22,9 +22,16 @@ const authMiddleware = async (req, res, next) => {
       throw new Error("Utilisateur introuvable");
     }
 
+    if (user.suspended) {
+      res.status(403);
+      throw new Error("Compte suspendu. Contactez l'administrateur.");
+    }
+
     req.user = user;
     next();
   } catch (error) {
+    // Un compte suspendu garde son code 403 et son message ; le reste reste une erreur 401.
+    if (res.statusCode === 403) return next(error);
     res.status(401);
     next(new Error("Non autorise, token invalide"));
   }

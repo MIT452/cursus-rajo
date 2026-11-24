@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Users, GraduationCap, Wallet, Check, Plus, Pencil, Trash2 } from "lucide-react";
+import { Users, GraduationCap, Wallet, Check, Plus, Pencil, Trash2, Ban, RotateCcw } from "lucide-react";
 import { getAdminStats } from "../services/dashboardService";
 import { updateCoursePrice, deleteCourse } from "../services/courseService";
+import { getUsers, setUserSuspension } from "../services/userService";
 import { useAuth } from "../hooks/useAuth";
 import Card from "../components/Card";
 import Modal from "../components/Modal";
@@ -98,9 +99,30 @@ const AdminDashboard = () => {
     }
   };
 
+  const [students, setStudents] = useState([]);
+  const [toSuspend, setToSuspend] = useState(null); // étudiant en attente de confirmation
+  const [suspending, setSuspending] = useState(false);
+  const [suspendError, setSuspendError] = useState("");
+
+  const confirmSuspension = async () => {
+    setSuspending(true);
+    setSuspendError("");
+    try {
+      await setUserSuspension(toSuspend.id, !toSuspend.suspended);
+      setToSuspend(null);
+      await load();
+    } catch (err) {
+      setSuspendError(err.response?.data?.message || "Action impossible. Réessayez.");
+    } finally {
+      setSuspending(false);
+    }
+  };
+
   const load = async () => {
     try {
-      setStats(await getAdminStats());
+      const [s, users] = await Promise.all([getAdminStats(), getUsers()]);
+      setStats(s);
+      setStudents(users.filter((u) => u.role === "USER"));
       setError(false);
     } catch {
       setError(true);
@@ -225,6 +247,92 @@ const AdminDashboard = () => {
           </table>
         </div>
       </FadeIn>
+
+      <FadeIn delay={0.2} className="mt-10">
+        <div className="mb-4">
+          <h2 className="font-display text-lg text-paper-50">Comptes étudiants</h2>
+          <p className="mt-1 text-xs text-paper-400">
+            Un compte suspendu ne peut plus se connecter ni utiliser la plateforme. Ses données sont conservées et le
+            compte peut être réactivé.
+          </p>
+        </div>
+        <div className="overflow-x-auto rounded-xl2 border border-white/8">
+          <table className="w-full min-w-[680px] text-left text-sm">
+            <thead className="bg-ink-800/60 text-paper-400">
+              <tr>
+                <th className="px-5 py-3 font-medium">Étudiant</th>
+                <th className="px-5 py-3 font-medium">Inscriptions</th>
+                <th className="px-5 py-3 font-medium">Statut</th>
+                <th className="px-5 py-3 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/8">
+              {students.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-5 py-6 text-center text-paper-400">
+                    Aucun compte étudiant.
+                  </td>
+                </tr>
+              )}
+              {students.map((u) => (
+                <tr key={u.id} className="bg-ink-900/30">
+                  <td className="px-5 py-4">
+                    <p className="text-paper-50">{u.name}</p>
+                    <p className="text-xs text-paper-400">{u.email}</p>
+                  </td>
+                  <td className="px-5 py-4 text-paper-100">{u._count?.enrollments ?? 0}</td>
+                  <td className="px-5 py-4">
+                    {u.suspended ? (
+                      <span className="text-red-300">Suspendu</span>
+                    ) : (
+                      <span className="text-teal-400">Actif</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => {
+                          setSuspendError("");
+                          setToSuspend(u);
+                        }}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                          u.suspended
+                            ? "bg-teal-500/15 text-teal-400 hover:bg-teal-500/25"
+                            : "bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                        }`}
+                      >
+                        {u.suspended ? <RotateCcw size={13} /> : <Ban size={13} />}
+                        {u.suspended ? "Réactiver" : "Suspendre"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </FadeIn>
+
+      <Modal
+        open={Boolean(toSuspend)}
+        onClose={() => !suspending && setToSuspend(null)}
+        title={toSuspend?.suspended ? "Réactiver ce compte ?" : "Suspendre ce compte ?"}
+      >
+        <p className="text-sm leading-relaxed text-paper-100">
+          {toSuspend?.suspended
+            ? `${toSuspend?.name} pourra de nouveau se connecter et reprendre ses cours.`
+            : `${toSuspend?.name} ne pourra plus se connecter tant que le compte reste suspendu. Ses inscriptions et sa progression sont conservées.`}
+        </p>
+        {suspendError && <p className="mt-3 text-sm text-red-300">{suspendError}</p>}
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="ghost" disabled={suspending} onClick={() => setToSuspend(null)}>
+            Annuler
+          </Button>
+          <Button loading={suspending} onClick={confirmSuspension}>
+            {toSuspend?.suspended ? "Réactiver" : "Suspendre"}
+          </Button>
+        </div>
+      </Modal>
 
       <Modal open={Boolean(toDelete)} onClose={() => !deleting && setToDelete(null)} title="Supprimer ce cours ?">
         <p className="text-sm leading-relaxed text-paper-100">

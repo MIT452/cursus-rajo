@@ -48,6 +48,11 @@ const login = asyncHandler(async (req, res) => {
     throw new Error("Identifiants invalides");
   }
 
+  if (user.suspended) {
+    res.status(403);
+    throw new Error("Compte suspendu. Contactez l'administrateur.");
+  }
+
   const token = generateToken({ id: user.id, role: user.role });
   res.json({ success: true, token, user: publicUser(user) });
 });
