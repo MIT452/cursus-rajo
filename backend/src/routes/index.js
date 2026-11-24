@@ -15,6 +15,6 @@ router.use("/courses", courseRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/enrollments", enrollmentRoutes);
 router.use("/dashboard", dashboardRoutes);
-router.use("/testimonial", testimonialRoutes);
+router.use("/testimonials", testimonialRoutes);
 
 module.exports = router;
