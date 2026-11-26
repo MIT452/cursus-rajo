@@ -6,3 +6,5 @@ backend/.env
 backend/.env.aiven
 backend/.env/example
 backend/node_modules
+frontend.zip
+backend.zip
